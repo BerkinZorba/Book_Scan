@@ -1,9 +1,7 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
 public class BookScan {
 
     /**
@@ -113,8 +111,7 @@ public class BookScan {
                 }
             }
         }
-
-        System.out.println("Target word length searched: " + wordLength);
+        System.out.println("\nTarget word length searched: " + wordLength);
         System.out.println("Matching words: " + String.join(", ", matchingWords));
         System.out.println("Total count: " + matchingWords.size());
     }
@@ -125,38 +122,18 @@ public class BookScan {
      * @param args command-line arguments, not used
      */
     public static void main(String[] args) {
-        String text;
+        Scanner scanner = new Scanner(System.in);
 
-        try {
-            text = readTextFromTerminal();
-        } catch (IOException e) {
-            System.out.println("Could not read input: " + e.getMessage());
-            return;
-        }
+        System.out.println("Paste or type your text, then press Enter:");
+        String text = scanner.nextLine();
 
-        int wordLength = readWordLength();
+        int wordLength = readWordLength(scanner);
         scanText(text, wordLength);
     }
 
-    private static String readTextFromTerminal() throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder typedInput = new StringBuilder();
-
-        System.out.println("Enter or paste text below. Submit a blank line when finished:");
-
-        String line;
-        while ((line = reader.readLine()) != null && !line.isEmpty()) {
-            typedInput.append(line).append(System.lineSeparator());
-        }
-
-        return typedInput.toString();
-    }
-
-    private static int readWordLength() {
-        Scanner scanner = new Scanner(System.in);
-
+    private static int readWordLength(Scanner scanner) {
         while (true) {
-            System.out.print("Enter target word length: ");
+            System.out.print("\nEnter target word length: ");
 
             if (scanner.hasNextInt()) {
                 int wordLength = scanner.nextInt();
