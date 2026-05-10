@@ -1,13 +1,11 @@
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Scanner;
 
-/**
- * The BookScan class analyzes text and finds words of a specific length.
- * It also reports how many matching words were found and which line numbers
- * contain those words.
- */
 public class BookScan {
 
     /**
@@ -75,22 +73,14 @@ public class BookScan {
     }
 
     /**
-     * Scans the given text and prints all words that match the target word length.
-     * The method splits the text into lines, then scans each line word by word.
-     *
-     * This method uses substring, stringLength, and upperLowerCase internally.
+     * Scans the given text and prints every word matching the target word length.
      *
      * @param text       the text to scan
      * @param wordLength the target word length
      */
     public static void scanText(String text, int wordLength) {
-        if (text == null) {
-            System.out.println("Input text is null.");
-            return;
-        }
-
-        if (text.isEmpty()) {
-            System.out.println("Input text is empty.");
+        if (text == null || text.isEmpty()) {
+            System.out.println("No text was provided.");
             return;
         }
 
@@ -99,32 +89,32 @@ public class BookScan {
             return;
         }
 
-        List<String> matchingWords = new ArrayList<>();
-        Set<Integer> lineNumbers = new LinkedHashSet<>();
+        int totalMatches = 0;
+        String[] lines = text.split("\\R", -1);
 
-        String[] lines = text.split("\\R");
+        System.out.println();
+        System.out.println("Target word length searched: " + wordLength);
+        System.out.println("Matching words:");
 
         for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
             String line = lines[lineIndex];
-
             int wordStart = -1;
 
             for (int i = 0; i <= line.length(); i++) {
                 boolean endOfLine = i == line.length();
-                boolean isLetterOrDigit = !endOfLine && Character.isLetterOrDigit(line.charAt(i));
+                boolean isWordCharacter = !endOfLine && Character.isLetterOrDigit(line.charAt(i));
 
-                if (isLetterOrDigit && wordStart == -1) {
+                if (isWordCharacter && wordStart == -1) {
                     wordStart = i;
                 }
 
-                if ((!isLetterOrDigit || endOfLine) && wordStart != -1) {
+                if ((!isWordCharacter || endOfLine) && wordStart != -1) {
                     String word = substring(line, wordStart, i);
-
                     String normalizedWord = upperLowerCase(word);
 
                     if (stringLength(normalizedWord) == wordLength) {
-                        matchingWords.add(word);
-                        lineNumbers.add(lineIndex + 1);
+                        totalMatches++;
+                        System.out.println("Line " + (lineIndex + 1) + ": " + word);
                     }
 
                     wordStart = -1;
@@ -132,42 +122,79 @@ public class BookScan {
             }
         }
 
-        System.out.println("Words of length " + wordLength + ": " + matchingWords);
-        System.out.println("Count: " + matchingWords.size());
-
-        if (lineNumbers.isEmpty()) {
-            System.out.println("Found on line(s): none");
-        } else {
-            System.out.println("Found on line(s): " + lineNumbers);
+        if (totalMatches == 0) {
+            System.out.println("No matching words found.");
         }
+
+        System.out.println("Total count: " + totalMatches);
     }
 
     /**
-     * Demonstrates the BookScan class by scanning sample text and showing
-     * all required methods working together.
+     * Runs the BookScan program.
      *
-     * @param args command-line arguments, not used
+     * @param args optional command-line arguments; the first argument may be a file path
      */
     public static void main(String[] args) {
-        String text = "The quick brown fox jumps over the lazy dog";
+        String text;
 
-        System.out.println("Original text:");
-        System.out.println(text);
-        System.out.println();
+        try {
+            text = loadText(args);
+        } catch (IOException e) {
+            System.out.println("Could not read input: " + e.getMessage());
+            return;
+        }
 
-        System.out.println("Demonstrating substring:");
-        System.out.println("substring(\"The\", 0, 2): " + substring("The", 0, 2));
-        System.out.println();
+        int wordLength = readWordLength();
+        scanText(text, wordLength);
+    }
 
-        System.out.println("Demonstrating stringLength:");
-        System.out.println("stringLength(\"fox\"): " + stringLength("fox"));
-        System.out.println();
+    private static String loadText(String[] args) throws IOException {
+        if (args != null && args.length > 0) {
+            return Files.readString(Path.of(args[0]), StandardCharsets.UTF_8);
+        }
 
-        System.out.println("Demonstrating upperLowerCase:");
-        System.out.println("upperLowerCase(\"The\"): " + upperLowerCase("The"));
-        System.out.println();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
 
-        System.out.println("Scanning text:");
-        scanText(text, 3);
+        if (System.console() == null) {
+            StringBuilder pipedInput = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                pipedInput.append(line).append(System.lineSeparator());
+            }
+
+            return pipedInput.toString();
+        }
+
+        System.out.println("Enter or paste text below. Submit a blank line when finished:");
+
+        StringBuilder typedInput = new StringBuilder();
+        String line;
+
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            typedInput.append(line).append(System.lineSeparator());
+        }
+
+        return typedInput.toString();
+    }
+
+    private static int readWordLength() {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.print("Enter target word length: ");
+
+            if (scanner.hasNextInt()) {
+                int wordLength = scanner.nextInt();
+
+                if (wordLength > 0) {
+                    return wordLength;
+                }
+            } else {
+                scanner.next();
+            }
+
+            System.out.println("Please enter a positive integer.");
+        }
     }
 }
