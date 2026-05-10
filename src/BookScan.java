@@ -1,11 +1,9 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-
 public class BookScan {
 
     /**
@@ -89,15 +87,10 @@ public class BookScan {
             return;
         }
 
-        int totalMatches = 0;
+        List<String> matchingWords = new ArrayList<>();
         String[] lines = text.split("\\R", -1);
 
-        System.out.println();
-        System.out.println("Target word length searched: " + wordLength);
-        System.out.println("Matching words:");
-
-        for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-            String line = lines[lineIndex];
+        for (String line : lines) {
             int wordStart = -1;
 
             for (int i = 0; i <= line.length(); i++) {
@@ -113,8 +106,7 @@ public class BookScan {
                     String normalizedWord = upperLowerCase(word);
 
                     if (stringLength(normalizedWord) == wordLength) {
-                        totalMatches++;
-                        System.out.println("Line " + (lineIndex + 1) + ": " + word);
+                        matchingWords.add(word);
                     }
 
                     wordStart = -1;
@@ -122,23 +114,21 @@ public class BookScan {
             }
         }
 
-        if (totalMatches == 0) {
-            System.out.println("No matching words found.");
-        }
-
-        System.out.println("Total count: " + totalMatches);
+        System.out.println("Target word length searched: " + wordLength);
+        System.out.println("Matching words: " + String.join(", ", matchingWords));
+        System.out.println("Total count: " + matchingWords.size());
     }
 
     /**
      * Runs the BookScan program.
      *
-     * @param args optional command-line arguments; the first argument may be a file path
+     * @param args command-line arguments, not used
      */
     public static void main(String[] args) {
         String text;
 
         try {
-            text = loadText(args);
+            text = readTextFromTerminal();
         } catch (IOException e) {
             System.out.println("Could not read input: " + e.getMessage());
             return;
@@ -148,29 +138,13 @@ public class BookScan {
         scanText(text, wordLength);
     }
 
-    private static String loadText(String[] args) throws IOException {
-        if (args != null && args.length > 0) {
-            return Files.readString(Path.of(args[0]), StandardCharsets.UTF_8);
-        }
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-
-        if (System.console() == null) {
-            StringBuilder pipedInput = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                pipedInput.append(line).append(System.lineSeparator());
-            }
-
-            return pipedInput.toString();
-        }
+    private static String readTextFromTerminal() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        StringBuilder typedInput = new StringBuilder();
 
         System.out.println("Enter or paste text below. Submit a blank line when finished:");
 
-        StringBuilder typedInput = new StringBuilder();
         String line;
-
         while ((line = reader.readLine()) != null && !line.isEmpty()) {
             typedInput.append(line).append(System.lineSeparator());
         }
